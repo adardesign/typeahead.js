@@ -24,32 +24,34 @@ var InputView = (function() {
       40: 'down'
     };
 
-    this.query = '';
-
     this.$hint = $(o.hint);
     this.$input = $(o.input)
-    .on('blur', this._handleBlur)
-    .on('focus', this._handleFocus)
-    .on('keydown', this._handleSpecialKeyEvent);
+    .on('blur.tt', this._handleBlur)
+    .on('focus.tt', this._handleFocus)
+    .on('keydown.tt', this._handleSpecialKeyEvent);
 
     // ie7 and ie8 don't support the input event
     // ie9 doesn't fire the input event when characters are removed
     // not sure if ie10 is compatible
     if (!utils.isMsie()) {
-      this.$input.on('input', this._compareQueryToInputValue);
+      this.$input.on('input.tt', this._compareQueryToInputValue);
     }
 
     else {
       this.$input
-      .on('keydown keypress cut paste', function(e) {
+      .on('keydown.tt keypress.tt cut.tt paste.tt', function($e) {
         // if a special key triggered this, ignore it
-        if (that.specialKeyCodeMap[e.which || e.keyCode]) { return; }
+        if (that.specialKeyCodeMap[$e.which || $e.keyCode]) { return; }
 
         // give the browser a chance to update the value of the input
         // before checking to see if the query changed
-        setTimeout(that._compareQueryToInputValue, 0);
+        utils.defer(that._compareQueryToInputValue);
       });
     }
+
+    // the query defaults to whatever the value of the input is
+    // on initialization, it'll most likely be an empty string
+    this.query = this.$input.val();
 
     // helps with calculating the width of the input's value
     this.$overflowHelper = buildOverflowHelper(this.$input);
@@ -60,18 +62,18 @@ var InputView = (function() {
     // ---------------
 
     _handleFocus: function() {
-      this.trigger('focus');
+      this.trigger('focused');
     },
 
     _handleBlur: function() {
-      this.trigger('blur');
+      this.trigger('blured');
     },
 
     _handleSpecialKeyEvent: function($e) {
       // which is normalized and consistent (but not for IE)
       var keyName = this.specialKeyCodeMap[$e.which || $e.keyCode];
 
-      keyName && this.trigger(keyName, $e);
+      keyName && this.trigger(keyName + 'Keyed', $e);
     },
 
     _compareQueryToInputValue: function() {
@@ -81,16 +83,23 @@ var InputView = (function() {
             this.query.length !== inputValue.length : false;
 
       if (isSameQueryExceptWhitespace) {
-        this.trigger('whitespaceChange', { value: this.query });
+        this.trigger('whitespaceChanged', { value: this.query });
       }
 
       else if (!isSameQuery) {
-        this.trigger('queryChange', { value: this.query = inputValue });
+        this.trigger('queryChanged', { value: this.query = inputValue });
       }
     },
 
     // public methods
     // --------------
+
+    destroy: function() {
+      this.$hint.off('.tt');
+      this.$input.off('.tt');
+
+      this.$hint = this.$input = this.$overflowHelper = null;
+    },
 
     focus: function() {
       this.$input.focus();
@@ -104,6 +113,10 @@ var InputView = (function() {
       return this.query;
     },
 
+    setQuery: function(query) {
+      this.query = query;
+    },
+
     getInputValue: function() {
       return this.$input.val();
     },
@@ -111,10 +124,7 @@ var InputView = (function() {
     setInputValue: function(value, silent) {
       this.$input.val(value);
 
-      // strict equal to support function(value) signature
-      if (silent !== true) {
-        this._compareQueryToInputValue();
-      }
+      !silent && this._compareQueryToInputValue();
     },
 
     getHintValue: function() {
@@ -185,8 +195,8 @@ var InputView = (function() {
 
   function compareQueries(a, b) {
     // strips leading whitespace and condenses all whitespace
-    a = (a || '').replace(/^\s*/g, '').replace(/\s{2,}/g, ' ').toLowerCase();
-    b = (b || '').replace(/^\s*/g, '').replace(/\s{2,}/g, ' ').toLowerCase();
+    a = (a || '').replace(/^\s*/g, '').replace(/\s{2,}/g, ' ');
+    b = (b || '').replace(/^\s*/g, '').replace(/\s{2,}/g, ' ');
 
     return a === b;
   }
