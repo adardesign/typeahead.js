@@ -3,6 +3,8 @@
  * https://github.com/twitter/typeahead
  * Copyright 2013 Twitter, Inc. and other contributors; Licensed MIT
  */
+
+http://www.diffnow.com/?report=5umon
 (function($) {
     var VERSION = "0.9.1";
     var utils = {
@@ -83,7 +85,9 @@
         debounce: function(func, wait, immediate) {
             var timeout, result;
             return function() {
-                var context = this, args = arguments, later, callNow;
+                var context = this,
+                    args = arguments,
+                    later, callNow;
                 later = function() {
                     timeout = null;
                     if (!immediate) {
@@ -108,7 +112,8 @@
                 result = func.apply(context, args);
             };
             return function() {
-                var now = new Date(), remaining = wait - (now - previous);
+                var now = new Date(),
+                    remaining = wait - (now - previous);
                 context = this;
                 args = arguments;
                 if (remaining <= 0) {
@@ -171,6 +176,7 @@
     }();
     var EventBus = function() {
         var namespace = "typeahead:";
+
         function EventBus(o) {
             if (!o || !o.el) {
                 $.error("EventBus initialized without el");
@@ -186,9 +192,11 @@
         return EventBus;
     }();
     var PersistentStorage = function() {
-        var ls = window.localStorage, methods;
+        var ls = window.localStorage,
+            methods;
+
         function PersistentStorage(namespace) {
-            this.prefix = [ "__", namespace, "__" ].join("");
+            this.prefix = ["__", namespace, "__"].join("");
             this.ttlKey = "__ttl__";
             this.keyMatcher = new RegExp("^" + this.prefix);
         }
@@ -220,13 +228,14 @@
                     return this;
                 },
                 clear: function() {
-                    var i, key, keys = [], len = ls.length;
+                    var i, key, keys = [],
+                        len = ls.length;
                     for (i = 0; i < len; i++) {
                         if ((key = ls.key(i)).match(this.keyMatcher)) {
                             keys.push(key.replace(this.keyMatcher, ""));
                         }
                     }
-                    for (i = keys.length; i--; ) {
+                    for (i = keys.length; i--;) {
                         this.remove(keys[i]);
                     }
                     return this;
@@ -247,12 +256,15 @@
         }
         utils.mixin(PersistentStorage.prototype, methods);
         return PersistentStorage;
+
         function now() {
             return new Date().getTime();
         }
+
         function encode(val) {
             return JSON.stringify(utils.isUndefined(val) ? null : val);
         }
+
         function decode(val) {
             return JSON.parse(val);
         }
@@ -282,7 +294,9 @@
         return RequestCache;
     }();
     var Transport = function() {
-        var pendingRequestsCount = 0, pendingRequests = {}, maxPendingRequests, requestCache;
+        var pendingRequestsCount = 0,
+            pendingRequests = {}, maxPendingRequests, requestCache;
+
         function Transport(o) {
             utils.bindAll(this);
             o = utils.isString(o) ? {
@@ -311,6 +325,7 @@
                 } else {
                     this.onDeckRequestArgs = [].slice.call(arguments, 0);
                 }
+
                 function done(resp) {
                     var data = that.filter ? that.filter(resp) : resp;
                     cb && cb(data);
@@ -318,12 +333,14 @@
                 }
             },
             _sendRequest: function(url) {
-                var that = this, jqXhr = pendingRequests[url];
+                var that = this,
+                    jqXhr = pendingRequests[url];
                 if (!jqXhr) {
                     incrementPendingRequests();
                     jqXhr = pendingRequests[url] = $.ajax(url, this.ajaxSettings).always(always);
                 }
                 return jqXhr;
+
                 function always() {
                     decrementPendingRequests();
                     pendingRequests[url] = null;
@@ -334,7 +351,9 @@
                 }
             },
             get: function(query, cb) {
-                var that = this, encodedQuery = encodeURIComponent(query || ""), url, resp;
+                var that = this,
+                    encodedQuery = encodeURIComponent(query || ""),
+                    url, resp;
                 cb = cb || utils.noop;
                 url = this.replace ? this.replace(this.url, encodedQuery) : this.url.replace(this.wildcard, encodedQuery);
                 if (resp = requestCache.get(url)) {
@@ -348,12 +367,15 @@
             }
         });
         return Transport;
+
         function incrementPendingRequests() {
             pendingRequestsCount++;
         }
+
         function decrementPendingRequests() {
             pendingRequestsCount--;
         }
+
         function belowPendingRequestsThreshold() {
             return pendingRequestsCount < maxPendingRequests;
         }
@@ -365,6 +387,7 @@
             itemHash: "itemHash",
             adjacencyList: "adjacencyList"
         };
+
         function Dataset(o) {
             utils.bindAll(this);
             if (utils.isString(o.template) && !o.engine) {
@@ -392,7 +415,9 @@
                 this._mergeProcessedData(this._processData(data));
             },
             _loadPrefetchData: function(o) {
-                var that = this, thumbprint = VERSION + (o.thumbprint || ""), storedThumbprint, storedProtocol, storedItemHash, storedAdjacencyList, isExpired, deferred;
+                var that = this,
+                    thumbprint = VERSION + (o.thumbprint || ""),
+                    storedThumbprint, storedProtocol, storedItemHash, storedAdjacencyList, isExpired, deferred;
                 if (this.storage) {
                     storedThumbprint = this.storage.get(keys.thumbprint);
                     storedProtocol = this.storage.get(keys.protocol);
@@ -414,8 +439,12 @@
                     deferred = $.getJSON(o.url).done(processPrefetchData);
                 }
                 return deferred;
+
                 function processPrefetchData(data) {
-                    var filteredData = o.filter ? o.filter(data) : data, processedData = that._processData(filteredData), itemHash = processedData.itemHash, adjacencyList = processedData.adjacencyList;
+                    var filteredData = o.filter ? o.filter(data) : data,
+                        processedData = that._processData(filteredData),
+                        itemHash = processedData.itemHash,
+                        adjacencyList = processedData.adjacencyList;
                     if (that.storage) {
                         that.storage.set(keys.itemHash, itemHash, o.ttl);
                         that.storage.set(keys.adjacencyList, adjacencyList, o.ttl);
@@ -426,10 +455,12 @@
                 }
             },
             _transformDatum: function(datum) {
-                var value = utils.isString(datum) ? datum : datum[this.valueKey], tokens = datum.tokens || utils.tokenizeText(value), item = {
-                    value: value,
-                    tokens: tokens
-                };
+                var value = utils.isString(datum) ? datum : datum[this.valueKey],
+                    tokens = datum.tokens || utils.tokenizeText(value),
+                    item = {
+                        value: value,
+                        tokens: tokens
+                    };
                 if (utils.isString(datum)) {
                     item.datum = {};
                     item.datum[this.valueKey] = datum;
@@ -445,12 +476,15 @@
                 return item;
             },
             _processData: function(data) {
-                var that = this, itemHash = {}, adjacencyList = {};
+                var that = this,
+                    itemHash = {}, adjacencyList = {};
                 utils.each(data, function(i, datum) {
-                    var item = that._transformDatum(datum), id = utils.getUniqueId(item.value);
+                    var item = that._transformDatum(datum),
+                        id = utils.getUniqueId(item.value);
                     itemHash[id] = item;
                     utils.each(item.tokens, function(i, token) {
-                        var character = token.charAt(0), adjacency = adjacencyList[character] || (adjacencyList[character] = [ id ]);
+                        var character = token.charAt(0),
+                            adjacency = adjacencyList[character] || (adjacencyList[character] = [id]);
                         !~utils.indexOf(adjacency, id) && adjacency.push(id);
                     });
                 });
@@ -468,7 +502,10 @@
                 });
             },
             _getLocalSuggestions: function(terms) {
-                var that = this, firstChars = [], lists = [], shortestList, suggestions = [];
+                var that = this,
+                    firstChars = [],
+                    lists = [],
+                    shortestList, suggestions = [];
                 utils.each(terms, function(i, term) {
                     var firstChar = term.charAt(0);
                     !~utils.indexOf(firstChars, firstChar) && firstChars.push(firstChar);
@@ -487,7 +524,8 @@
                     return [];
                 }
                 utils.each(shortestList, function(i, id) {
-                    var item = that.itemHash[id], isCandidate, isMatch;
+                    var item = that.itemHash[id],
+                        isCandidate, isMatch;
                     isCandidate = utils.every(lists, function(list) {
                         return ~utils.indexOf(list, id);
                     });
@@ -512,7 +550,8 @@
                 return deferred;
             },
             getSuggestions: function(query, cb) {
-                var that = this, terms, suggestions, cacheHit = false;
+                var that = this,
+                    terms, suggestions, cacheHit = false;
                 if (query.length < this.minLength) {
                     return;
                 }
@@ -520,12 +559,13 @@
                 suggestions = this._getLocalSuggestions(terms).slice(0, this.limit);
                 if (suggestions.length < this.limit && this.transport) {
                     cacheHit = this.transport.get(query, processRemoteData);
-                }
-                !cacheHit && cb && cb(suggestions);
+                }!cacheHit && cb && cb(suggestions);
+
                 function processRemoteData(data) {
                     suggestions = suggestions.slice(0);
                     utils.each(data, function(i, datum) {
-                        var item = that._transformDatum(datum), isDuplicate;
+                        var item = that._transformDatum(datum),
+                            isDuplicate;
                         isDuplicate = utils.some(suggestions, function(suggestion) {
                             return item.value === suggestion.value;
                         });
@@ -537,8 +577,10 @@
             }
         });
         return Dataset;
+
         function compileTemplate(template, engine, valueKey) {
-            var wrapper = '<div class="tt-suggestion">%body</div>', renderFn, wrappedTemplate, compiledTemplate;
+            var wrapper = '<div class="tt-suggestion">%body</div>',
+                renderFn, wrappedTemplate, compiledTemplate;
             if (utils.isFunction(template)) {
                 renderFn = template;
             } else if (utils.isString(template)) {
@@ -594,15 +636,11 @@
             },
             _compareQueryToInputValue: function() {
                 var inputValue = this.getInputValue(),
-                isSameQuery = compareQueries(this.query, inputValue),
-                isSameQueryExceptWhitespace = isSameQuery ? this.query.length !== inputValue.length : false;
-
-                /*Edited*/
+                    isSameQuery = compareQueries(this.query, inputValue),
+                    isSameQueryExceptWhitespace = isSameQuery ? this.query.length !== inputValue.length : false; /*Edited*/
                 if (/\s$/.test(inputValue)) {
                     e.stopPropagation();
-                }
-                /*/Edited*/
-
+                } /*/Edited*/
                 if (isSameQueryExceptWhitespace) {
                     this.trigger("whitespaceChanged", {
                         value: this.query
@@ -651,18 +689,21 @@
                 return this.$overflowHelper.width() > this.$input.width();
             },
             isCursorAtEnd: function() {
-                var valueLength = this.$input.val().length, selectionStart = this.$input[0].selectionStart, range;
+                var valueLength = this.$input.val().length,
+                    selectionStart = this.$input[0].selectionStart,
+                    range;
                 if (utils.isNumber(selectionStart)) {
                     return selectionStart === valueLength;
                 } else if (document.selection) {
                     range = document.selection.createRange();
-                    range.moveStart("character", -valueLength);
+                    range.moveStart("character", - valueLength);
                     return valueLength === range.text.length;
                 }
                 return true;
             }
         });
         return InputView;
+
         function buildOverflowHelper($input) {
             return $("<span></span>").css({
                 position: "absolute",
@@ -681,6 +722,7 @@
                 textTransform: $input.css("text-transform")
             }).insertAfter($input);
         }
+
         function compareQueries(a, b) {
             a = (a || "").replace(/^\s*/g, "").replace(/\s{2,}/g, " ");
             b = (b || "").replace(/^\s*/g, "").replace(/\s{2,}/g, " ");
@@ -702,6 +744,7 @@
                 whiteSpace: "normal"
             }
         };
+
         function DropdownView(o) {
             utils.bindAll(this);
             this.isOpen = false;
@@ -805,7 +848,9 @@
                 return $suggestion.length > 0 ? extractSuggestion($suggestion) : null;
             },
             renderSuggestions: function(dataset, suggestions) {
-                var datasetClassName = "tt-dataset-" + dataset.name, $suggestionsList, $dataset = this.$menu.find("." + datasetClassName), elBuilder, fragment, $el;
+                var datasetClassName = "tt-dataset-" + dataset.name,
+                    $suggestionsList, $dataset = this.$menu.find("." + datasetClassName),
+                    elBuilder, fragment, $el;
                 if ($dataset.length === 0) {
                     $suggestionsList = $(html.suggestionsList).css(css.suggestionsList);
                     $dataset = $("<div></div>").addClass(datasetClassName).append(dataset.header).append($suggestionsList).append(dataset.footer).appendTo(this.$menu);
@@ -830,7 +875,8 @@
                 this.trigger("suggestionsRendered");
             },
             clearSuggestions: function(datasetName) {
-                var $datasets = datasetName ? this.$menu.find(".tt-dataset-" + datasetName) : this.$menu.find('[class^="tt-dataset-"]'), $suggestions = $datasets.find(".tt-suggestions");
+                var $datasets = datasetName ? this.$menu.find(".tt-dataset-" + datasetName) : this.$menu.find('[class^="tt-dataset-"]'),
+                    $suggestions = $datasets.find(".tt-suggestions");
                 $datasets.hide();
                 $suggestions.empty();
                 if (this._getSuggestions().length === 0) {
@@ -840,6 +886,7 @@
             }
         });
         return DropdownView;
+
         function extractSuggestion($el) {
             return $el.data("suggestion");
         }
@@ -888,6 +935,7 @@
                 marginTop: "-1px"
             });
         }
+
         function TypeaheadView(o) {
             var $menu, $input, $hint;
             utils.bindAll(this);
@@ -908,16 +956,16 @@
         }
         utils.mixin(TypeaheadView.prototype, EventTarget, {
             _managePreventDefault: function(e) {
-                var $e = e.data, hint, inputValue, preventDefault = false;
+                var $e = e.data,
+                    hint, inputValue, preventDefault = false;
                 switch (e.type) {
-                  case "tabKeyed":
+                case "tabKeyed":
                     hint = this.inputView.getHintValue();
                     inputValue = this.inputView.getInputValue();
                     preventDefault = hint && hint !== inputValue;
                     break;
-
-                  case "upKeyed":
-                  case "downKeyed":
+                case "upKeyed":
+                case "downKeyed":
                     preventDefault = !$e.shiftKey && !$e.ctrlKey && !$e.metaKey;
                     break;
                 }
@@ -931,14 +979,15 @@
                     this.dropdownView.setLanguageDirection(dir);
                 }
             },
-            _whitespaceChanged: function(){
-                debugger;
-                if(true){
-
-                }
+            _whitespaceChanged: function() {
+                if (true) {}
             },
             _updateHint: function() {
-                var suggestion = this.dropdownView.getFirstSuggestion(), hint = suggestion ? suggestion.value : null, dropdownIsVisible = this.dropdownView.isVisible(), inputHasOverflow = this.inputView.isOverflow(), inputValue, query, escapedQuery, beginsWithQuery, match;
+                var suggestion = this.dropdownView.getFirstSuggestion(),
+                    hint = suggestion ? suggestion.value : null,
+                    dropdownIsVisible = this.dropdownView.isVisible(),
+                    inputHasOverflow = this.inputView.isOverflow(),
+                    inputValue, query, escapedQuery, beginsWithQuery, match;
                 if (hint && dropdownIsVisible && !inputHasOverflow) {
                     inputValue = this.inputView.getInputValue();
                     query = inputValue.replace(/\s{2,}/g, " ").replace(/^\s+/g, "");
@@ -974,16 +1023,24 @@
                 }
             },
             _handleSelection: function(e) {
-                var byClick = e.type === "suggestionSelected", suggestion = byClick ? e.data : this.dropdownView.getSuggestionUnderCursor();
+                var byClick = e.type === "suggestionSelected",
+                    suggestion = byClick ? e.data : this.dropdownView.getSuggestionUnderCursor();
                 if (suggestion) {
+                    var value = suggestion.value,
+                        ele = $(".tt-suggestion:contains('" + value + "')"),
+                        data = {
+                            index: ele.index(),
+                            origValue: this.inputView.query
+                        };
                     this.inputView.setInputValue(suggestion.value);
                     byClick ? this.inputView.focus() : e.data.preventDefault();
                     byClick && utils.isMsie() ? utils.defer(this.dropdownView.close) : this.dropdownView.close();
-                    this.eventBus.trigger("selected", suggestion.datum);
+                    this.eventBus.trigger("selected", suggestion.datum, data);
                 }
             },
             _getSuggestions: function() {
-                var that = this, query = this.inputView.getQuery();
+                var that = this,
+                    query = this.inputView.getQuery();
                 if (utils.isBlankString(query)) {
                     return;
                 }
@@ -1030,8 +1087,12 @@
             }
         });
         return TypeaheadView;
+
         function buildDomStructure(input) {
-            var $wrapper = $(html.wrapper), $dropdown = $(html.dropdown), $input = $(input), $hint = $(html.hint);
+            var $wrapper = $(html.wrapper),
+                $dropdown = $(html.dropdown),
+                $input = $(input),
+                $hint = $(html.hint);
             $wrapper = $wrapper.css(css.wrapper);
             $dropdown = $dropdown.css(css.dropdown);
             $hint.css(css.hint).css({
@@ -1059,6 +1120,7 @@
             } catch (e) {}
             return $input.wrap($wrapper).parent().prepend($hint).append($dropdown);
         }
+
         function destroyDomStructure($node) {
             var $input = $node.find(".tt-query");
             utils.each($input.data("ttAttrs"), function(key, val) {
@@ -1069,11 +1131,12 @@
         }
     }();
     (function() {
-        var cache = {}, viewKey = "ttView", methods;
+        var cache = {}, viewKey = "ttView",
+            methods;
         methods = {
             initialize: function(datasetDefs) {
                 var datasets;
-                datasetDefs = utils.isArray(datasetDefs) ? datasetDefs : [ datasetDefs ];
+                datasetDefs = utils.isArray(datasetDefs) ? datasetDefs : [datasetDefs];
                 if (datasetDefs.length === 0) {
                     $.error("no datasets provided");
                 }
@@ -1085,10 +1148,12 @@
                     return dataset;
                 });
                 return this.each(initialize);
+
                 function initialize() {
-                    var $input = $(this), deferreds, eventBus = new EventBus({
-                        el: $input
-                    });
+                    var $input = $(this),
+                        deferreds, eventBus = new EventBus({
+                            el: $input
+                        });
                     deferreds = utils.map(datasets, function(dataset) {
                         return dataset.initialize();
                     });
@@ -1108,8 +1173,10 @@
             },
             destroy: function() {
                 return this.each(destroy);
+
                 function destroy() {
-                    var $this = $(this), view = $this.data(viewKey);
+                    var $this = $(this),
+                        view = $this.data(viewKey);
                     if (view) {
                         view.destroy();
                         $this.removeData(viewKey);
@@ -1118,6 +1185,7 @@
             },
             setQuery: function(query) {
                 return this.each(setQuery);
+
                 function setQuery() {
                     var view = $(this).data(viewKey);
                     view && view.setQuery(query);
