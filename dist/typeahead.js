@@ -3,7 +3,6 @@
  * https://github.com/twitter/typeahead
  * Copyright 2013 Twitter, Inc. and other contributors; Licensed MIT
  */
-
 (function($) {
     var VERSION = "0.9.1";
     var utils = {
@@ -594,7 +593,16 @@
                 keyName && this.trigger(keyName + "Keyed", $e);
             },
             _compareQueryToInputValue: function() {
-                var inputValue = this.getInputValue(), isSameQuery = compareQueries(this.query, inputValue), isSameQueryExceptWhitespace = isSameQuery ? this.query.length !== inputValue.length : false;
+                var inputValue = this.getInputValue(),
+                isSameQuery = compareQueries(this.query, inputValue),
+                isSameQueryExceptWhitespace = isSameQuery ? this.query.length !== inputValue.length : false;
+
+                /*Edited*/
+                if (/\s$/.test(inputValue)) {
+                    e.stopPropagation();
+                }
+                /*/Edited*/
+
                 if (isSameQueryExceptWhitespace) {
                     this.trigger("whitespaceChanged", {
                         value: this.query
@@ -896,7 +904,7 @@
             this.inputView = new InputView({
                 input: $input,
                 hint: $hint
-            }).on("focused", this._openDropdown).on("blured", this._closeDropdown).on("blured", this._setInputValueToQuery).on("enterKeyed", this._handleSelection).on("queryChanged", this._clearHint).on("queryChanged", this._clearSuggestions).on("queryChanged", this._getSuggestions).on("whitespaceChanged", this._updateHint).on("queryChanged whitespaceChanged", this._openDropdown).on("queryChanged whitespaceChanged", this._setLanguageDirection).on("escKeyed", this._closeDropdown).on("escKeyed", this._setInputValueToQuery).on("tabKeyed upKeyed downKeyed", this._managePreventDefault).on("upKeyed downKeyed", this._moveDropdownCursor).on("upKeyed downKeyed", this._openDropdown).on("tabKeyed leftKeyed rightKeyed", this._autocomplete);
+            }).on("focused", this._openDropdown).on("blured", this._closeDropdown).on("blured", this._setInputValueToQuery).on("enterKeyed", this._handleSelection).on("queryChanged", this._clearHint).on("queryChanged", this._clearSuggestions).on("queryChanged", this._getSuggestions).on("whitespaceChanged", this._whitespaceChanged).on("queryChanged whitespaceChanged", this._openDropdown).on("queryChanged whitespaceChanged", this._setLanguageDirection).on("escKeyed", this._closeDropdown).on("escKeyed", this._setInputValueToQuery).on("tabKeyed upKeyed downKeyed", this._managePreventDefault).on("upKeyed downKeyed", this._moveDropdownCursor).on("upKeyed downKeyed", this._openDropdown).on("tabKeyed leftKeyed rightKeyed", this._autocomplete);
         }
         utils.mixin(TypeaheadView.prototype, EventTarget, {
             _managePreventDefault: function(e) {
@@ -921,6 +929,12 @@
                     this.dir = dir;
                     this.$node.css("direction", dir);
                     this.dropdownView.setLanguageDirection(dir);
+                }
+            },
+            _whitespaceChanged: function(){
+                debugger;
+                if(true){
+
                 }
             },
             _updateHint: function() {
